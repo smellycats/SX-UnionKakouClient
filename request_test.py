@@ -12,11 +12,14 @@ from union_kakou import UnionKakou
 
 class UnionKakouTest(object):
     def __init__(self):
-        self.host = '127.0.0.1'
-        self.port = 5000
+        self.ini = {
+            'host': '127.0.0.1',
+            'port': 5000
+        }
+        self.uk = UnionKakou(**self.ini)
     
     def test_kakou_post(self):
-        uk = UnionKakou(**{'host': self.host, 'port': self.port})
+        """上传卡口数据"""
         data = [
             {
                 'jgsj': arrow.now().format('YYYY-MM-DD HH:mm:ss'),
@@ -39,27 +42,34 @@ class UnionKakouTest(object):
             }
         ]
 
-        r = uk.post_kakou(data)
+        r = self.uk.post_kakou(data)
         assert isinstance(r, dict) == True
         #assert r['headers'] == 201
 
 
 class KakouTest(object):
     def __init__(self):
-        self.host = '127.0.0.1'
-        self.port = 5000
+        self.ini = {
+            'host': '127.0.0.1',
+            'port': 80,
+            'city': 'hcq'
+        }
+        self.kk = Kakou(**self.ini)
+
+    def __del__(self):
+        pass
 
     def test_get_cltxs(self):
-        k = Kakou(**{'host': self.host, 'port': self.port, 'city': 'hcq'})
-        r = k.get_cltxs(123, 125)
+        """根据ID范围获取卡口信息"""
+        r = self.kk.get_cltxs(123, 125)
 
         assert 'total_count' in r
         
     def test_get_maxid(self):
-        k = Kakou(**{'host': self.host, 'port': self.port, 'city': 'hcq'})
-        r = k.get_maxid()
+        """获取最大ID"""
+        r = self.kk.get_maxid()
 
-        assert 'count' in r
+        assert 'maxid' in r
 
 if __name__ == '__main__':  # pragma nocover
     kt = UnionKakouTest()
