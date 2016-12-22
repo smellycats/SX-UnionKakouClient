@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import time
 import json
 
@@ -12,7 +12,7 @@ from ini_conf import MyIni
 from my_logger import *
 
 
-debug_logging(u'/home/logs/error.log')
+debug_logging(u'logs/error.log')
 logger = logging.getLogger('root')
 
 
@@ -27,10 +27,9 @@ class UploadData(object):
         self.kk = Kakou2(**self.kk_ini)
         self.uk = UnionKakou(**self.uk_ini)
 	self.sq = KakouDB()
-        #print self.uk_ini
 
-        self.uk.status = True
         self.kk.status = True
+        self.uk.status = True
 
         # ID上传标记
         self.id_flag = self.kk_ini['id_flag']
@@ -62,7 +61,6 @@ class UploadData(object):
     def post_data(self, start_id, end_id):
 	"""上传卡口数据"""
         car_info = self.kk.get_kakou(start_id, end_id)
-        #print 'car_info count %s' % car_info['total_count']
         # 如果查询数据为0则退出
         if car_info['total_count'] == 0:
             return
@@ -77,16 +75,15 @@ class UploadData(object):
                          'hpys_id': self.hpys_id.get(i['hpys_code'], 4), # 号牌颜色ID
                          'fxbh': i['fxbh_code'],     # 方向编号
                          'cdbh': i['cdbh'],          # 车道
-			 'clsd': i['clsd'],
-			 'hpzl': i['hpzl'],
+			 'clsd': i['clsd'],          # 车速
+			 'hpzl': i['hpzl'],          # 号牌种类
                          'img_path': i['imgurl']})   # 图片url地址
-        r = self.uk.post_kakou(data)  #上传数据
+        r = self.uk.post_kakou(data)                 # 上传数据
 
-    def post_info(self):
+    def post_info_realtime(self):
         print 'id_flag: %s' % self.id_flag
-        """上传数据"""
+        """上传实时数据"""
         maxid = self.kk.get_maxid()
-	#print 'maxid:%s' % maxid
         # 没有新数据则返回
         if maxid <= self.id_flag:
             return
@@ -99,8 +96,8 @@ class UploadData(object):
         # 设置最新ID
         self.set_id(last_id)
 
-    def post_info2(self):
-        """上传数据"""
+    def post_info_history(self):
+        """上传历史数据"""
 	r = self.sq.get_idflag(banned=0)
 	if r is None:
 	    return
@@ -124,8 +121,8 @@ class UploadData(object):
 		ini_flag = True
             elif self.kk.status and self.uk.status:
                 try:
-                    self.post_info()
-		    self.post_info2()
+                    self.post_info_realtime()
+		    self.post_info_history()
                     time.sleep(0.5)
                 except Exception as e:
                     logger.error(e)
