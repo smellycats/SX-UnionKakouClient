@@ -78,7 +78,8 @@ class UploadData(object):
 			 'clsd': i['clsd'],          # 车速
 			 'hpzl': i['hpzl'],          # 号牌种类
                          'img_path': i['imgurl']})   # 图片url地址
-        r = self.uk.post_kakou(data)                 # 上传数据
+        if len(data) > 0:
+            r = self.uk.post_kakou(data)                 # 上传数据
 
     def post_info_realtime(self):
         print 'id_flag: %s' % self.id_flag
@@ -86,7 +87,7 @@ class UploadData(object):
         maxid = self.kk.get_maxid()
         # 没有新数据则返回
         if maxid <= self.id_flag:
-            return
+            return 0
 
         if maxid > (self.id_flag + self.step):
             last_id = self.id_flag + self.step
@@ -96,13 +97,15 @@ class UploadData(object):
         # 设置最新ID
         self.set_id(last_id)
 
+        return maxid - self.id_flag
+
     def post_info_history(self):
         """上传历史数据"""
 	r = self.sq.get_idflag(banned=0)
 	if r is None:
-	    return
+	    return 0
 	if r[1] + self.step + 1 < r[2]:
-	    last_id = r[1] + self.step
+	    last_id = r[1] + self.step - 1
 	else:
 	    last_id = r[2]
 	self.post_data(r[1], last_id)
@@ -110,8 +113,8 @@ class UploadData(object):
         self.sq.set_idflag(r[0], last_id+1)
 	# 结束此条历史记录
 	if last_id == r[2]:
-	    self.del_idflag(r[0])
-	    
+	    self.sq.del_idflag(r[0])
+	return 1
 
     def main_loop(self):
 	ini_flag = False
@@ -121,9 +124,11 @@ class UploadData(object):
 		ini_flag = True
             elif self.kk.status and self.uk.status:
                 try:
-                    self.post_info_realtime()
-		    self.post_info_history()
-                    time.sleep(0.5)
+                    n = self.post_info_realtime()
+                    if n < self.step:
+                        n2 = self.post_info_history()
+		        if n2 > 0:
+                            time.sleep(0.5)
                 except Exception as e:
                     logger.error(e)
                     time.sleep(1)
