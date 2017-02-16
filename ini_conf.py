@@ -1,9 +1,9 @@
-#-*- encoding: utf-8 -*-
+﻿#-*- encoding: utf-8 -*-
 import ConfigParser
 
 class MyIni:
 
-    def __init__(self, conf_path = 'my_ini.conf'):
+    def __init__(self, conf_path = '/home/my_ini.conf'):
         self.conf_path = conf_path
         self.cf = ConfigParser.ConfigParser()
         self.cf.read(conf_path)
@@ -12,10 +12,12 @@ class MyIni:
         """获取卡口配置文件"""
         conf = {}
         section = 'KAKOU'
-        conf['host']    = self.cf.get(section, 'host')
-        conf['port']    = self.cf.getint(section, 'port')
-        conf['id_flag'] = self.cf.getint(section, 'id_flag')
-        conf['city']    = self.cf.get(section, 'city')
+        conf['host']     = self.cf.get(section, 'host')
+        conf['port']     = self.cf.getint(section, 'port')
+	conf['city']     = self.cf.get(section, 'city')
+	conf['username'] = self.cf.get(section, 'username')
+	conf['password'] = self.cf.get(section, 'password')
+        conf['id_flag']  = self.cf.getint(section, 'id_flag')
         return conf
 
     def get_union(self):
