@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import json
 
 import requests
@@ -27,8 +27,8 @@ class Kakou(object):
                 return json.loads(r.text)['count']
             else:
                 self.status = False
-                raise Exception(u'url: %s, status: %s, %s' % (
-                    url, r.status_code, r.text))
+                raise Exception(u'url: {url}, status: {code}, {text}'.format(
+                    url=url, code=r.status_code, text=r.text))
         except Exception as e:
 	    self.status = False
             raise
@@ -44,8 +44,25 @@ class Kakou(object):
                 return json.loads(r.text)['items']
             else:
                 self.status = False
-                raise Exception(u'url: %s, status: %s, %s' % (
-                    url, r.status_code, r.text))
+                raise Exception(u'url: {url}, status: {code}, {text}'.format(
+                    url=url, code=r.status_code, text=r.text))
+        except Exception as e:
+	    self.status = False
+            raise
+
+    def get_kkdd_all(self):
+        """获取卡口地点"""
+        url = 'http://{0}:{1}/kk/{2}/kkdd'.format(
+            self.host, self.port, self.city)
+        try:
+            r = requests.get(url, headers=self.headers,
+		 	     auth=HTTPBasicAuth(self.username, self.password))
+            if r.status_code == 200:
+                return json.loads(r.text)['items']
+            else:
+                self.status = False
+                raise Exception(u'url: {url}, status: {code}, {text}'.format(
+                    url=url, code=r.status_code, text=r.text))
         except Exception as e:
 	    self.status = False
             raise
@@ -95,8 +112,8 @@ class Kakou(object):
                 return json.loads(r.text)
             else:
                 self.status = False
-                raise Exception(u'url: %s, status: %s, %s' % (
-                    url, r.status_code, r.text))
+                raise Exception(u'url: {url}, status: {code}, {text}'.format(
+                    url=url, code=r.status_code, text=r.text))
         except Exception as e:
 	    self.status = False
             raise
