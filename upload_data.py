@@ -40,8 +40,11 @@ class UploadData(object):
             'YL': 1,
             'BU': 2,
             'BK': 3,
-            'QT': 4
+            'GN': 4,
+            'QT': 9
         }
+
+        self.kkdd_set = set()
 
     def set_history_kakou(self):
 	"""添加历史记录卡口"""
@@ -69,10 +72,12 @@ class UploadData(object):
         for i in car_info['items']:
             if i['kkdd_id'] is None or i['kkdd_id'] == '':
 		i['kkdd_id'] = '441302000'
+	    if i['kkdd_id'] not in self.kkdd_set:
+		continue
             data.append({'jgsj': i['jgsj'],          # 经过时间
                          'hphm': i['hphm'],          # 号牌号码
                          'kkdd_id': i['kkdd_id'],    # 卡口地点ID
-                         'hpys_id': self.hpys_id.get(i['hpys_code'], 4), # 号牌颜色ID
+                         'hpys_id': self.hpys_id.get(i['hpys_code'], 9), # 号牌颜色ID
                          'fxbh': i['fxbh_code'],     # 方向编号
                          'cdbh': i['cdbh'],          # 车道
 			 'clsd': i['clsd'],          # 车速
