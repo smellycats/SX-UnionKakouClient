@@ -4,7 +4,6 @@ import json
 
 import arrow
 
-from kakou import Kakou
 from helper_kakou2 import Kakou as Kakou2
 from union_kakou import UnionKakou
 from sqlitedb import KakouDB
@@ -77,7 +76,7 @@ class UploadData(object):
             data.append({'jgsj': i['jgsj'],          # 经过时间
                          'hphm': i['hphm'],          # 号牌号码
                          'kkdd_id': i['kkdd_id'],    # 卡口地点ID
-                         'hpys_id': self.hpys_id.get(i['hpys_code'], 9), # 号牌颜色ID
+                         'hpys_id': i['hpys_id'],    # 号牌颜色ID
                          'fxbh': i['fxbh_code'],     # 方向编号
                          'cdbh': i['cdbh'],          # 车道
 			 'clsd': i['clsd'],          # 车速
@@ -87,6 +86,7 @@ class UploadData(object):
             r = self.uk.post_kakou(data)                 # 上传数据
 
     def post_info_realtime(self):
+        """上传实时数据"""
         print 'id_flag: %s' % self.id_flag
         """上传实时数据"""
         maxid = self.kk.get_maxid()
