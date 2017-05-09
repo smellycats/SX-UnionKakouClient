@@ -1,0 +1,16 @@
+kakou:
+  host: '127.0.0.1'
+  port: 5000
+  username: '123'
+  password: '456'
+union:
+  host: '123'
+  port: '8082'
+city: hcq
+kkdd_id: '441302000'
+id_flag: 123
+id_step: 200
+usefulkkdd:
+- '123'
+- '456'
+- '789'
