@@ -86,7 +86,8 @@ class Kakou(object):
 
     def get_maxid(self):
         """获取cltx表最大id值"""
-        url = 'http://{0}:{1}/kk/{2}/maxid'.format(self.host, self.port, self.city)
+        url = 'http://{0}:{1}/kk/{2}/maxid'.format(
+            self.host, self.port, self.city)
         try:
             r = requests.get(url, headers=self.headers,
 			     auth=HTTPBasicAuth(self.username, self.password))
@@ -102,7 +103,8 @@ class Kakou(object):
 
     def get_bkcp(self, hphm=None):
         """获取布控车辆信息"""
-        url = 'http://{0}:{1}/kk/{2}/bkcp'.format(self.host, self.port, self.city)
+        url = 'http://{0}:{1}/kk/{2}/bkcp'.format(
+            self.host, self.port, self.city)
 	if hphm is not None:
 	    url += '/{0}'.format(hphm)
         try:
