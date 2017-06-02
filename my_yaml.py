@@ -11,8 +11,7 @@ class MyYAML(object):
 
     def get_ini(self):
         f = open(self.path, 'r')
-        return ruamel.yaml.load(
-            stream=f, Loader=ruamel.yaml.RoundTripLoader)
+        return ruamel.yaml.load(stream=f, Loader=ruamel.yaml.RoundTripLoader)
         f.close()
 
     def set_ini(self, data):
