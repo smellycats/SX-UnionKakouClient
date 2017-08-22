@@ -1,16 +1,14 @@
 kakou:
-  host: '127.0.0.1'
-  port: 5000
-  username: '123'
-  password: '456'
+  host: 10.123.123.123
+  port: 80123
+  city: 123
+  username: 123
+  password: 123
 union:
-  host: '123'
-  port: '8082'
-city: hcq
-kkdd_id: '441302000'
-id_flag: 123
+  host: 10.123.123.123
+  port: 8080
+city: hy
+kkdd_id: '441303000'
+id_flag: 901936322
 id_step: 200
 usefulkkdd:
-- '123'
-- '456'
-- '789'
