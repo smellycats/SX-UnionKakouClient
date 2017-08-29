@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import time
 import json
 
@@ -11,21 +11,21 @@ from my_yaml import MyYAML
 from my_logger import *
 
 
-debug_logging(u'logs/error.log')
+debug_logging(u'/home/logs/error.log')
 logger = logging.getLogger('root')
 
 
 class UploadData(object):
     def __init__(self):
         # 配置文件
-        self.ini = MyYAML('my.yaml')
-        self.flag_ini = MyYAML('flag.yaml')
+        self.ini = MyYAML('/home/my.yaml')
+        self.flag_ini = MyYAML('/home/flag.yaml')
         self.my_ini = self.ini.get_ini()
 
         # request方法类
         self.kk = Kakou(**dict(self.my_ini['kakou']))
         self.uk = UnionKakou(**dict(self.my_ini['union']))
-        self.sq = KakouDB()
+        self.sq = KakouDB('/home/kakou.db')
         
         self.kk.status = True
         self.uk.status = True
@@ -82,6 +82,7 @@ class UploadData(object):
         maxid = self.kk.get_maxid()
         # id间隔
         interval = maxid - self.id_flag
+        #print('interval={0}'.format(interval))
         # 没有新数据则返回
         if interval <= 0:
             r = self.post_data_from_db()
