@@ -1,85 +1,141 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
+import time
+import json
+
 import arrow
 
-from kakou import Kakou
+from helper_kakou_v2 import Kakou
 from union_kakou import UnionKakou
+from sqlitedb import KakouDB
+from my_yaml import MyYAML
+from my_logger import *
 
-from ini_conf import MyIni
+
+debug_logging(u'/home/logs/error.log')
+logger = logging.getLogger('root')
 
 
 class UploadData(object):
     def __init__(self):
         # 配置文件
-        self.my_ini = MyIni()
-        self.kk_ini = self.my_ini.get_kakou()
-        self.uk_ini = self.my_ini.get_union()
+        self.ini = MyYAML('/home/my.yaml')
+        self.flag_ini = MyYAML('/home/flag.yaml')
+        self.my_ini = self.ini.get_ini()
 
         # request方法类
-        self.kk = Kakou(**self.kk_ini)
-        self.uk = UnionKakou(**self.uk_ini)
+        self.kk = Kakou(**dict(self.my_ini['kakou']))
+        self.uk = UnionKakou(**dict(self.my_ini['union']))
+        self.sq = KakouDB('/home/kakou.db')
+        
+        self.kk.status = True
+        self.uk.status = True
 
-        # ID上传标记
-        self.id_flag = self.kk_ini['id_flag']
-        self.step = 1000
+        self.city = self.my_ini['city']
+        self.kkdd_id = self.my_ini['kkdd_id']
+        self.id_flag = self.flag_ini.get_ini()['id']
+        self.step = self.my_ini['id_step']
+        # 有效的卡口地点
+        if self.my_ini['usefulkkdd'] is None:
+            self.useful_kkdd = set()
+        else:
+            self.useful_kkdd = set(self.my_ini['usefulkkdd'])
 
-
-    def set_id(self, _id):
+    def set_id(self, _id, msg=''):
         """设置ID"""
         self.id_flag = _id
-        self.my_ini.set_id(_id)
+        self.flag_ini.set_ini({'id': _id})
+        logger.info('{0} {1}'.format(_id, msg))
 
-    def post_info(self):
-        """上传数据"""
-        maxid = self.kk.get_maxid()['maxid']
-        # 没有新数据则返回
-        if maxid <= self.id_flag: 
+    def post_data(self, start_id, end_id):
+        """上传卡口数据"""
+        info = self.kk.get_kakou(start_id, end_id, 1, self.step+1)
+        # 如果查询数据为0则退出
+        if info['total_count'] == 0:
             return
 
-        if maxid < (self.id_flag + self.step):
-            last_id = self.id_flag + self.step
-        else:
-            last_id = maxid
-
-        car_info = self.kk.get_cltxs(self.id_flag, last_id)
-        # 如果查询数据为0
-        if car_info['total_count'] == 0:
-            # 设置最新ID
-            self.set_id(last_id)
-            return
-
-        # 过滤卡口地点ID为None的数据
-        effect_car_info = filter(lambda x: x['kkdd_id'] is not None,
-                                 car_info['items'])
         data = []
-        for i in effect_car_info:
-            data.append({'jgsj': i.jgsj,          # 经过时间
-                         'hphm': i.hphm,          # 号牌号码
-                         'kkdd_id': i.kkdd_id,    # 卡口地点ID
-                         'hpys_id': '',           # 号牌颜色ID
-                         'fxbh': i.fxbh_code,     # 方向编号
-                         'cdbh': i.cdbh,          # 车道
-                         'img_path': i.img_path}) # 图片url地址
-        r = self.uk.post_kakou(data)  #上传数据
-        # 设置最新ID
-        self.set_id(last_id)
+        for i in info['items']:
+            if i['kkbh'] is None:
+                i['kkdd_id'] = self.kkdd_id
+                i['kkbh'] = self.kkdd_id
+            elif len(i['kkbh']) != 9:
+                i['kkdd_id'] = self.kkdd_id
+                i['kkbh'] = self.kkdd_id
+	    # 有效卡点为零时
+            if len(self.useful_kkdd) == 0:
+                pass
+            elif i['kkdd_id'] not in self.useful_kkdd:
+                continue
+            data.append({'jgsj': i['jgsj'],          # 经过时间
+                         'hphm': i['hphm'],          # 号牌号码
+                         'kkdd_id': i['kkbh'],       # 卡口地点ID
+                         'hpys_id': i['hpys_id'],    # 号牌颜色ID
+                         'fxbh': i['fxbh_code'],     # 方向编号
+                         'cdbh': i['cdbh'],          # 车道
+			                   'clsd': i['clsd'],          # 车速
+			                   'hpzl': i['hpzl'],          # 号牌种类
+                         'img_path': i['imgurl']})   # 图片url地址
+        if len(data) > 0:
+            self.uk.post_kakou(data)                 # 上传数据
 
+    def post_info_realtime(self):
+        print('id_flag: {0}'.format(self.id_flag))
+        """上传实时数据"""
+        maxid = self.kk.get_maxid()
+        # id间隔
+        interval = maxid - self.id_flag
+        #print('interval={0}'.format(interval))
+        # 没有新数据则返回
+        if interval <= 0:
+            r = self.post_data_from_db()
+            return r
+        # id间隔大于阀值
+        if interval > self.step * 60:
+            for i in range(60):
+                self.sq.add_idflag(self.id_flag+1, self.id_flag+self.step)
+                self.set_id(self.id_flag+self.step, msg='sqlite')  # 设置最新ID
+            return 0
+        # id间隔小于步长
+        if interval < self.step:
+            self.post_data(self.id_flag+1, maxid)
+            self.set_id(maxid)   # 设置最新ID
+            return 0.5
+        
+        self.post_data(self.id_flag+1, self.id_flag+self.step)
+        self.set_id(self.id_flag+self.step)
+        return 0.25
+
+    def post_data_from_db(self):
+        """上传历史数据"""
+        r = self.sq.get_idflag(banned=0, limit=1)
+        if r == []:
+            return 1
+        self.post_data(r[0][1], r[0][2])
+        # 删除历史ID
+        self.sq.del_idflag(r[0][0])
+        logger.info('{0} {1}'.format(r[0][2], 'from db'))
+        return 0
 
     def main_loop(self):
         while 1:
             if self.kk.status and self.uk.status:
                 try:
-                    self.post_info()
-                    time.sleep(1)
+                    n = self.post_info_realtime()
+                    time.sleep(n)
                 except Exception as e:
-                    time.sleep(1)
+                    logger.exception(e)
+                    time.sleep(5)
             else:
                 try:
+                    print(self.kk.status)
+                    print(self.uk.status)
                     if not self.kk.status:
                         self.kk.get_maxid()
                         self.kk.status = True
                     if not self.uk.status:
-                        self.uk.get_test()
+                        self.uk.connect_test()
                         self.uk.status = True
                 except Exception as e:
+                    logger.exception(e)
                     time.sleep(1)
-        
+
