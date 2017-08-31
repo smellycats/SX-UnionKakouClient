@@ -2,9 +2,9 @@ import sqlite3
 
 
 class KakouDB(object):
-    def __init__(self):
-        self.conn = sqlite3.connect('/home/kakou.db')
-        print "Opened database successfully";
+    def __init__(self, path='kakou.db'):
+        self.conn = sqlite3.connect(path)
+        print("Opened database successfully")
 
     def __del__(self):
         self.conn.close()
@@ -16,9 +16,9 @@ class KakouDB(object):
         self.conn.commit()
         return r.fetchone()[0]
 
-    def set_idflag(self, _id, start_id):
-        sql = "UPDATE IDFLAG SET start_id={0} WHERE id={1}".format(
-            start_id, _id)
+    def set_idflag(self, _id, banned=1):
+        sql = "UPDATE IDFLAG SET banned={0} WHERE id={1}".format(
+            banned, _id)
         self.conn.execute(sql)
         self.conn.commit()
 
@@ -27,19 +27,13 @@ class KakouDB(object):
         r = self.conn.execute(sql)
         return r.fetchone()
 
-    def get_idflag(self, banned=0):
-        sql = "SELECT * FROM IDFLAG WHERE banned={0}".format(banned)
+    def get_idflag(self, banned=0, limit=20, offset=0):
+        sql = "SELECT * FROM IDFLAG WHERE banned={0} ORDER BY id DESC LIMIT {1} OFFSET {2}".format(banned, limit, offset)
         r = self.conn.execute(sql)
-        return r.fetchone()
+        return r.fetchall()
 
     def del_idflag(self, _id):
-        sql = "UPDATE IDFLAG SET banned=1 WHERE id={0}".format(_id)
+        sql = "DELETE FROM IDFLAG WHERE id={0}".format(_id)
         self.conn.execute(sql)
         self.conn.commit()
 
-if __name__ == "__main__":
-    s = KakouDB()
-    print s.add_idflag(2, 4)
-    #s.set_idflag(1, 5)
-    print s.get_idflag(0)
-    #s.del_idflag(1)
