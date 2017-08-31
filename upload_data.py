@@ -56,9 +56,11 @@ class UploadData(object):
         data = []
         for i in info['items']:
             if i['kkbh'] is None:
-                if len(i['kkbh']) != 9:
-                    i['kkdd_id'] = self.kkdd_id
-                    i['kkbh'] = self.kkdd_id
+                i['kkdd_id'] = self.kkdd_id
+                i['kkbh'] = self.kkdd_id
+            elif len(i['kkbh']) != 9:
+                i['kkdd_id'] = self.kkdd_id
+                i['kkbh'] = self.kkdd_id
 	    # 有效卡点为零时
             if len(self.useful_kkdd) == 0:
                 pass
