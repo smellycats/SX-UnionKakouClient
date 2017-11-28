@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import time
 import json
 
@@ -72,8 +72,8 @@ class UploadData(object):
                          'hpys_id': i['hpys_id'],    # 号牌颜色ID
                          'fxbh': i['fxbh_code'],     # 方向编号
                          'cdbh': i['cdbh'],          # 车道
-			                   'clsd': i['clsd'],          # 车速
-			                   'hpzl': i['hpzl'],          # 号牌种类
+                         'clsd': i['clsd'],          # 车速
+                         'hpzl': i['hpzl'],          # 号牌种类
                          'img_path': i['imgurl']})   # 图片url地址
         if len(data) > 0:
             self.uk.post_kakou(data)                 # 上传数据
