@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import time
 import json
 
 import arrow
 
-from helper_kakou_v2 import Kakou
-from union_kakou import UnionKakou
+from helper_kakou_v3 import Kakou
+from helper_union_upload import UnionUpload
 from sqlitedb import KakouDB
 from my_yaml import MyYAML
 from my_logger import *
@@ -24,7 +24,7 @@ class UploadData(object):
 
         # request方法类
         self.kk = Kakou(**dict(self.my_ini['kakou']))
-        self.uk = UnionKakou(**dict(self.my_ini['union']))
+        self.uk = UnionUpload(**dict(self.my_ini['union']))
         self.sq = KakouDB('/home/kakou.db')
         
         self.kk.status = True
@@ -64,7 +64,7 @@ class UploadData(object):
 	    # 有效卡点为零时
             if len(self.useful_kkdd) == 0:
                 pass
-            elif i['kkdd_id'] not in self.useful_kkdd:
+            elif i['kkbh'] not in self.useful_kkdd:
                 continue
             data.append({'jgsj': i['jgsj'],          # 经过时间
                          'hphm': i['hphm'],          # 号牌号码
@@ -72,8 +72,8 @@ class UploadData(object):
                          'hpys_id': i['hpys_id'],    # 号牌颜色ID
                          'fxbh': i['fxbh_code'],     # 方向编号
                          'cdbh': i['cdbh'],          # 车道
-                         'clsd': i['clsd'],          # 车速
-                         'hpzl': i['hpzl'],          # 号牌种类
+			 'clsd': i['clsd'],          # 车速
+			 'hpzl': i['hpzl'],          # 号牌种类
                          'img_path': i['imgurl']})   # 图片url地址
         if len(data) > 0:
             self.uk.post_kakou(data)                 # 上传数据
@@ -133,7 +133,7 @@ class UploadData(object):
                         self.kk.get_maxid()
                         self.kk.status = True
                     if not self.uk.status:
-                        self.uk.connect_test()
+                        self.uk.get_root()
                         self.uk.status = True
                 except Exception as e:
                     logger.exception(e)
